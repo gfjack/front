@@ -29,7 +29,7 @@
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="getStatusType(row.status)" size="small">
-              {{ row.statusDesc }}
+              {{ getStatusDesc(row.status) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -48,8 +48,16 @@
             {{ formatTime(row.createTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column label="操作" width="250">
           <template #default="{ row }">
+            <el-button
+                type="info"
+                size="small"
+                icon="View"
+                @click="openDetailDialog(row)"
+            >
+              详情
+            </el-button>
             <el-button
                 type="primary"
                 size="small"
@@ -83,6 +91,76 @@
         </el-table-column>
       </el-table>
     </el-card>
+
+    <!-- 留言详情对话框 -->
+    <el-dialog
+        v-model="detailDialogVisible"
+        title="留言详情"
+        width="800px"
+        :close-on-click-modal="false"
+    >
+      <div v-if="currentDetailMessage" class="message-detail-view">
+        <!-- 留言信息 -->
+        <div class="message-main-info">
+          <h3>留言信息</h3>
+          <div class="info-row">
+            <span class="label">用户名：</span>
+            <span class="value">{{ currentDetailMessage.username }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">留言时间：</span>
+            <span class="value">{{ formatTime(currentDetailMessage.createTime) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">状态：</span>
+            <el-tag :type="getStatusType(currentDetailMessage.status)" size="small">
+              {{ getStatusDesc(currentDetailMessage.status) }}
+            </el-tag>
+          </div>
+          <div class="info-row">
+            <span class="label">留言内容：</span>
+          </div>
+          <div class="message-content-full">
+            {{ currentDetailMessage.content }}
+          </div>
+        </div>
+
+        <!-- 回复列表 -->
+        <div v-if="currentDetailMessage.replies && currentDetailMessage.replies.length > 0" class="replies-section">
+          <h3>回复记录 ({{ currentDetailMessage.replies.length }}条)</h3>
+          <div class="replies-list">
+            <div
+                v-for="(reply, index) in currentDetailMessage.replies"
+                :key="reply.id"
+                class="reply-detail-item"
+            >
+              <div class="reply-header">
+                <span class="reply-index">#{{ index + 1 }}</span>
+                <span class="reply-time">{{ formatTime(reply.createTime) }}</span>
+                <el-tag :type="reply.isVisible ? 'success' : 'warning'" size="small">
+                  {{ reply.isVisible ? '公开' : '私密' }}
+                </el-tag>
+              </div>
+              <div class="reply-content-full">
+                {{ reply.content }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-else class="no-replies">
+          <el-empty description="暂无回复" :image-size="100" />
+        </div>
+      </div>
+
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="detailDialogVisible = false">关闭</el-button>
+          <el-button type="primary" @click="openReplyFromDetail">
+            回复留言
+          </el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 回复对话框 -->
     <el-dialog
@@ -166,10 +244,12 @@ import { getAllMessages, replyMessage, setMessageVisibility } from '@/api/messag
 const loading = ref(false)
 const submitLoading = ref(false)
 const replyDialogVisible = ref(false)
+const detailDialogVisible = ref(false)
 const replyFormRef = ref()
 
 const messageList = ref([])
 const currentMessage = ref(null)
+const currentDetailMessage = ref(null)
 
 const replyForm = reactive({
   content: '',
@@ -193,12 +273,13 @@ const loadMessages = async () => {
     loading.value = true
     const response = await getAllMessages()
     if (response.code === 200) {
-      messageList.value = response.data
+      messageList.value = response.data || []
     }
   } catch (error) {
-    if (error !== 'cancel') {
-      console.error('设置留言可见性失败:', error)
-    }
+    console.error('加载留言列表失败:', error)
+    ElMessage.error('加载留言列表失败')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -212,11 +293,85 @@ const getStatusType = (status) => {
   }
 }
 
+const getStatusDesc = (status) => {
+  switch (status) {
+    case 'PENDING': return '待处理'
+    case 'PUBLISHED': return '已发布'
+    case 'REPLIED': return '已回复'
+    case 'HIDDEN': return '已隐藏'
+    default: return status
+  }
+}
+
 const getRowClassName = ({ row }) => {
   if (row.status === 'PENDING') {
     return 'pending-row'
   }
   return ''
+}
+
+const openDetailDialog = (row) => {
+  currentDetailMessage.value = row
+  detailDialogVisible.value = true
+}
+
+const openReplyFromDetail = () => {
+  detailDialogVisible.value = false
+  openReplyDialog(currentDetailMessage.value)
+}
+
+const openReplyDialog = (row) => {
+  currentMessage.value = row
+  replyForm.content = ''
+  replyForm.isVisible = true
+  replyDialogVisible.value = true
+}
+
+const handleReply = async () => {
+  try {
+    await replyFormRef.value.validate()
+    submitLoading.value = true
+
+    const response = await replyMessage(currentMessage.value.id, replyForm)
+    if (response.code === 200) {
+      ElMessage.success('回复发送成功')
+      replyDialogVisible.value = false
+      loadMessages()
+    }
+  } catch (error) {
+    console.error('发送回复失败:', error)
+    ElMessage.error('发送回复失败')
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+const handleVisibilityCommand = async (command, row) => {
+  try {
+    let isVisible = command === 'publish'
+    let actionText = isVisible ? '公开' : '隐藏'
+
+    await ElMessageBox.confirm(
+        `确定要将此留言设为${actionText}吗？`,
+        '确认操作',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+    )
+
+    const response = await setMessageVisibility(row.id, isVisible)
+    if (response.code === 200) {
+      ElMessage.success(`留言已设为${actionText}`)
+      loadMessages()
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('设置留言可见性失败:', error)
+      ElMessage.error('操作失败')
+    }
+  }
 }
 
 const formatTime = (time) => {
@@ -353,57 +508,98 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 10px;
 }
+
+.message-detail-view {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.message-main-info {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.message-main-info h3 {
+  margin: 0 0 15px 0;
+  color: #303133;
+  font-size: 16px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.info-row .label {
+  font-weight: bold;
+  color: #606266;
+  min-width: 80px;
+}
+
+.info-row .value {
+  color: #303133;
+}
+
+.message-content-full {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  border: 1px solid #e4e7ed;
+  line-height: 1.6;
+  color: #303133;
+  margin-top: 10px;
+  white-space: pre-wrap;
+}
+
+.replies-section h3 {
+  margin: 0 0 15px 0;
+  color: #303133;
+  font-size: 16px;
+}
+
+.replies-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.reply-detail-item {
+  background: white;
+  border: 1px solid #e4e7ed;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 10px;
+}
+
+.reply-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.reply-index {
+  font-weight: bold;
+  color: #409EFF;
+}
+
+.reply-time {
+  color: #909399;
+  font-size: 13px;
+}
+
+.reply-content-full {
+  line-height: 1.6;
+  color: #303133;
+  white-space: pre-wrap;
+}
+
+.no-replies {
+  text-align: center;
+  padding: 40px 0;
+}
 </style>
-
-console.error('加载留言列表失败:', error)
-} finally {
-loading.value = false
-}
-}
-
-const openReplyDialog = (row) => {
-currentMessage.value = row
-replyForm.content = ''
-replyForm.isVisible = true
-replyDialogVisible.value = true
-}
-
-const handleReply = async () => {
-try {
-await replyFormRef.value.validate()
-submitLoading.value = true
-
-const response = await replyMessage(currentMessage.value.id, replyForm)
-if (response.code === 200) {
-ElMessage.success('回复发送成功')
-replyDialogVisible.value = false
-loadMessages()
-}
-} catch (error) {
-console.error('发送回复失败:', error)
-} finally {
-submitLoading.value = false
-}
-}
-
-const handleVisibilityCommand = async (command, row) => {
-try {
-let isVisible = command === 'publish'
-let actionText = isVisible ? '公开' : '隐藏'
-
-await ElMessageBox.confirm(
-`确定要将此留言设为${actionText}吗？`,
-'确认操作',
-{
-confirmButtonText: '确定',
-cancelButtonText: '取消',
-type: 'warning'
-}
-)
-
-const response = await setMessageVisibility(row.id, isVisible)
-if (response.code === 200) {
-ElMessage.success(`留言已设为${actionText}`)
-loadMessages()
-}
-}

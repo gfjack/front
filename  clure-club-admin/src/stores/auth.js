@@ -10,17 +10,17 @@ export const useAuthStore = defineStore('auth', () => {
     const login = async (loginData) => {
         try {
             const response = await apiLogin(loginData)
-            if (response.code === 200) {
-                token.value = response.data.token
-                adminInfo.value = response.data.adminInfo
+            // 如果执行到这里，说明API调用成功（response.code === 200）
+            token.value = response.data.token
+            adminInfo.value = response.data.adminInfo
 
-                localStorage.setItem('admin_token', token.value)
-                localStorage.setItem('admin_info', JSON.stringify(adminInfo.value))
+            localStorage.setItem('admin_token', token.value)
+            localStorage.setItem('admin_info', JSON.stringify(adminInfo.value))
 
-                return { success: true }
-            }
-            return { success: false, message: response.message }
+            return { success: true }
         } catch (error) {
+            // API层已经处理了错误提示，这里只返回失败状态
+            console.error('登录API调用失败:', error)
             return { success: false, message: error.message }
         }
     }

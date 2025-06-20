@@ -174,6 +174,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getAllPrizes, createPrize, updatePrize, deletePrize } from '@/api/prizes'
+import {API_BASE_URL} from "@/api/request.js";
 
 const loading = ref(false)
 const submitLoading = ref(false)
@@ -343,9 +344,10 @@ const handleDelete = async (row) => {
   }
 }
 
+// 修改 getImageUrl 函数
 const getImageUrl = (url) => {
   if (!url) return ''
-  return url.startsWith('http') ? url : `/lureclub${url}`
+  return url.startsWith('http') ? url : `${API_BASE_URL}${url}`
 }
 
 const handleImageError = (e) => {

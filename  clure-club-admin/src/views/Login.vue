@@ -3,9 +3,7 @@
     <div class="login-wrapper">
       <div class="login-header">
         <div class="logo">
-          <el-icon size="40" color="#409EFF">
-            <Trophy />
-          </el-icon>
+          <img :src="logoImage" alt="雷霆路亚" class="login-logo" />
         </div>
         <h1>雷霆路亚俱乐部</h1>
         <p>管理员登录</p>
@@ -52,7 +50,7 @@
 
       <div class="login-tips">
         <p>默认管理员账号：admin</p>
-        <p>默认密码：admin123</p>
+        <p>默认密码：admin1234</p>
       </div>
     </div>
   </div>
@@ -63,6 +61,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import logoImage from '@/assets/logo-thunder-lure-login-centered.svg'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -72,7 +71,7 @@ const loading = ref(false)
 
 const loginForm = reactive({
   username: 'admin',
-  password: 'admin123'
+  password: 'admin1234'
 })
 
 const loginRules = {
@@ -96,9 +95,14 @@ const handleLogin = async () => {
       ElMessage.success('登录成功')
       router.push('/')
     } else {
-      ElMessage.error(result.message || '登录失败')
+      // 这里直接显示错误信息，不需要ElMessage，因为API层已经处理了
+      console.error('登录失败:', result.message)
     }
   } catch (error) {
+    // 只有在非API错误时才显示消息
+    if (error.message && !error.response) {
+      ElMessage.error('网络连接失败，请检查网络')
+    }
     console.error('登录失败:', error)
   } finally {
     loading.value = false
@@ -132,6 +136,12 @@ const handleLogin = async () => {
 
 .logo {
   margin-bottom: 15px;
+}
+
+.login-logo {
+  height: 100px;
+  width: auto;
+  max-width: 100%;
 }
 
 .login-header h1 {

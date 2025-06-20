@@ -1,0 +1,59 @@
+<svg width="300" height="120" viewBox="0 0 300 120" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#263238"/>
+            <stop offset="50%" stop-color="#37474F"/>
+            <stop offset="100%" stop-color="#455A64"/>
+        </linearGradient>
+        <linearGradient id="thunderBolt" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#FFEB3B"/>
+            <stop offset="50%" stop-color="#FFC107"/>
+            <stop offset="100%" stop-color="#FF8F00"/>
+        </linearGradient>
+        <radialGradient id="innerGlow" cx="50%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#4FC3F7" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#2196F3" stop-opacity="0"/>
+        </radialGradient>
+    </defs>
+
+    <!-- 盾牌背景 - 大幅向左移动 -->
+    <path d="M20 22.5 Q50 15 50 15 Q50 15 80 22.5 L80 67.5 Q50 97.5 50 97.5 Q50 97.5 20 67.5 Z"
+          fill="url(#shieldGradient)"
+          stroke="#1A237E"
+          stroke-width="3"/>
+
+    <!-- 内发光效果 - 大幅向左移动 -->
+    <path d="M23.5 25.5 Q50 18 50 18 Q50 18 76.5 25.5 L76.5 64.5 Q50 91.5 50 91.5 Q50 91.5 23.5 64.5 Z"
+          fill="url(#innerGlow)"/>
+
+    <!-- 闪电标志 - 大幅向左移动 -->
+    <path d="M37.5 33 L55 33 L47.5 48 L62.5 48 L40 75 L47.5 60 L37.5 60 Z"
+          fill="url(#thunderBolt)"
+          stroke="#FF6F00"
+          stroke-width="1.5"/>
+
+    <!-- 鱼的轮廓 - 大幅向左移动 -->
+    <path d="M66 52.5 Q74 49.5 82 52.5 Q86 55.5 82 58.5 Q74 61.5 66 58.5 Q62 55.5 66 52.5"
+          fill="#4FC3F7"
+          stroke="#2196F3"
+          stroke-width="1.5"/>
+    <circle cx="70" cy="55.5" r="1.5" fill="#1565C0"/>
+
+    <!-- 文字部分 - 大幅向左移动 -->
+    <text x="95" y="37.5"
+          font-family="'Microsoft YaHei', Arial, sans-serif"
+          font-size="30"
+          font-weight="bold"
+          fill="#FFD54F">雷霆路亚</text>
+
+    <text x="95" y="63"
+          font-family="Arial, sans-serif"
+          font-size="16.5"
+          font-weight="600"
+          fill="#81C784">THUNDER LURE CLUB</text>
+
+    <text x="95" y="85.5"
+          font-family="Arial, sans-serif"
+          font-size="13.5"
+          fill="#90A4AE">专业路亚钓鱼俱乐部</text>
+</svg>

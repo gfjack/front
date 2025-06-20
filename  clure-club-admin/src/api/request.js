@@ -2,9 +2,12 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 
+// 配置
+const API_BASE_URL = 'http://localhost:8080'
+
 // 创建axios实例
 const request = axios.create({
-    baseURL: '/lureclub',
+    baseURL: API_BASE_URL,
     timeout: 30000,
     headers: {
         'Content-Type': 'application/json'
@@ -41,7 +44,7 @@ request.interceptors.response.use(
             return data
         }
 
-        // API错误
+        // API错误 - 只在这里显示一次错误提示
         ElMessage.error(data.message || '请求失败')
         return Promise.reject(new Error(data.message || '请求失败'))
     },
@@ -51,25 +54,30 @@ request.interceptors.response.use(
         if (error.response) {
             const { status, data } = error.response
 
+            // 根据状态码显示不同的错误信息，但只显示一次
+            let errorMessage = ''
             switch (status) {
                 case 401:
-                    ElMessage.error('登录已过期，请重新登录')
+                    errorMessage = '登录已过期，请重新登录'
                     localStorage.removeItem('admin_token')
                     localStorage.removeItem('admin_info')
                     router.push('/login')
                     break
                 case 403:
-                    ElMessage.error('没有权限访问')
+                    errorMessage = '没有权限访问'
                     break
                 case 404:
-                    ElMessage.error('请求的资源不存在')
+                    errorMessage = '请求的资源不存在'
                     break
                 case 500:
-                    ElMessage.error('服务器内部错误')
+                    errorMessage = '服务器内部错误'
                     break
                 default:
-                    ElMessage.error(data?.message || `请求失败 (${status})`)
+                    errorMessage = data?.message || `请求失败 (${status})`
             }
+
+            // 只显示一次错误提示
+            ElMessage.error(errorMessage)
         } else if (error.request) {
             ElMessage.error('网络连接失败，请检查网络')
         } else {
@@ -80,4 +88,6 @@ request.interceptors.response.use(
     }
 )
 
+// 导出API基础URL供其他地方使用
+export { API_BASE_URL }
 export default request

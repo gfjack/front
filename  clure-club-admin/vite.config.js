@@ -11,12 +11,7 @@ export default defineConfig({
     },
     server: {
         host: '0.0.0.0',
-        port: 3000,
-        proxy: {
-            '/lureclub': {
-                target: 'http://localhost:8080',
-                changeOrigin: true
-            }
-        }
+        port: 3000
+        // 移除代理配置，直接访问后端
     }
 })

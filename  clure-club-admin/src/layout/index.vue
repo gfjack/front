@@ -6,10 +6,20 @@
         class="sidebar"
     >
       <div class="logo-container" :class="{ collapsed: isCollapse }">
-        <el-icon size="32" color="#409EFF">
-          <Trophy />
-        </el-icon>
-        <span v-show="!isCollapse" class="logo-text">雷霆路亚</span>
+        <div class="logo-content">
+          <img
+              v-if="!isCollapse"
+              :src="logoImage"
+              alt="雷霆路亚"
+              class="logo-image"
+          />
+          <img
+              v-else
+              :src="logoImage"
+              alt="雷霆路亚"
+              class="logo-icon"
+          />
+        </div>
       </div>
 
       <el-menu
@@ -83,6 +93,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
+import logoImage from '@/assets/logo-thunder-lure-2.svg'
 
 const route = useRoute()
 const router = useRouter()
@@ -161,27 +172,40 @@ onMounted(() => {
 .logo-container {
   display: flex;
   align-items: center;
-  justify-content: center;
-  height: 60px;
-  padding: 0 20px;
-  background-color: #34495e;
+  justify-content: flex-start;
+  height: 110px;
+  padding: 20px;
+  background-color: #2c3e50;
   transition: all 0.3s;
 }
 
 .logo-container.collapsed {
-  padding: 0;
+  padding: 15px;
+  justify-content: center;
+  height: 70px;
 }
 
-.logo-text {
-  margin-left: 10px;
-  color: white;
-  font-size: 18px;
-  font-weight: bold;
+.logo-content {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.logo-image {
+  height: 80px;
+  width: auto;
+  max-width: 220px;
+}
+
+.logo-icon {
+  height: 50px;
+  width: 50px;
 }
 
 .sidebar-menu {
   border: none;
-  height: calc(100vh - 60px);
+  height: calc(100vh - 110px);
 }
 
 .main-container {
