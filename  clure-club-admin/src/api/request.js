@@ -2,8 +2,8 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '@/router'
 
-// 配置
-const API_BASE_URL = 'http://localhost:8080'
+// 配置 - 从环境变量读取API地址
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
 
 // 创建axios实例
 const request = axios.create({

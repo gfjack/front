@@ -1,0 +1,46 @@
+server {
+    listen 80;
+    server_name your-domain.com;  # 替换为您的域名
+    
+    # 前端静态文件
+    location / {
+        root /var/www/lure-club-admin;  # 替换为您的部署路径
+        index index.html;
+        try_files $uri $uri/ /index.html;  # SPA路由支持
+    }
+    
+    # API代理到后端
+    location /api/ {
+        proxy_pass http://localhost:8080/api/;  # 后端服务地址
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # CORS 设置
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods 'GET, POST, PUT, DELETE, OPTIONS';
+        add_header Access-Control-Allow-Headers 'DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization';
+        
+        if ($request_method = 'OPTIONS') {
+            return 204;
+        }
+    }
+    
+    # 静态资源缓存
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+
+# HTTPS 配置（推荐）
+# server {
+#     listen 443 ssl;
+#     server_name your-domain.com;
+#     
+#     ssl_certificate /path/to/your/certificate.crt;
+#     ssl_certificate_key /path/to/your/private.key;
+#     
+#     # 其他配置同上...
+# }
